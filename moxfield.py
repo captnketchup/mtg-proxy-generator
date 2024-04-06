@@ -6,19 +6,25 @@ from dataclasses import dataclass
 class Card:
     id: str
     name: str
-    
-    def get_image_url():
-        return f"https://assets.moxfield.net/cards/card-{id}-normal.jpg"
+
+    def get_image_url(self):
+        return f"https://assets.moxfield.net/cards/card-{self.id}-normal.jpg"
 
 
 class MoxfieldClient:
     baseUrl = "https://api2.moxfield.com/v2/"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+    }
 
     def get_deck_by_id(self, deck_id: str):
-        response = requests.get(f"{self.baseUrl}decks/all/{deck_id}")
+        print(f"{self.baseUrl}decks/all/{deck_id}")
+        response = requests.get(
+            f"{self.baseUrl}decks/all/{deck_id}", headers=self.headers
+        )
 
         if response.status_code != 200:
-            raise Exception("Deck not found!")
+            raise Exception(response.reason)
 
         body = response.json()
         cards_dictionary = body.get("mainboard", None)
