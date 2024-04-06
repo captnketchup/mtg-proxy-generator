@@ -17,8 +17,23 @@ class MoxfieldClient:
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
     }
 
+    def get_decks_by_user(self, user_id: str):
+        response = requests.get(
+            f"{self.baseUrl}users/{user_id}/decks", headers=self.headers
+        )
+
+        if response.status_code != 200:
+            raise Exception(response.reason)
+
+        body = response.json()
+        deck_dictionary = body.get("data", None)
+
+        if deck_dictionary is None:
+            raise Exception("Decks not found!")
+        deck_list: list[tuple[str, str]] = list(map(lambda x: (x.get("publicId"), x.get("name")), deck_dictionary))
+        return deck_list
+
     def get_deck_by_id(self, deck_id: str):
-        print(f"{self.baseUrl}decks/all/{deck_id}")
         response = requests.get(
             f"{self.baseUrl}decks/all/{deck_id}", headers=self.headers
         )
