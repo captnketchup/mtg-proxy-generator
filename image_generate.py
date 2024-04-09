@@ -2,17 +2,28 @@ from PIL import Image
 import requests
 from io import BytesIO
 import math
+import concurrent.futures
+
+def _download_image(url):
+    response = requests.get(url)
+    if response.status_code != 200:
+        print(f"Double sided cards are not supported yet! url: {url}")
+        return None
+    return Image.open(BytesIO(response.content))
 
 
 def _download_images(urls):
     images = []
-    for url in urls:
-        response = requests.get(url)
-        if response.status_code != 200:
-            print(f"Double sided cards are not supported yet! url: {url}")
-            continue
-        img = Image.open(BytesIO(response.content))
-        images.append(img)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_to_url = {executor.submit(_download_image, url): url for url in urls}
+        for future in concurrent.futures.as_completed(future_to_url):
+            url = future_to_url[future]
+            try:
+                img = future.result()
+                if img is not None:
+                    images.append(img)
+            except Exception as e:
+                print(f"Exception occurred while downloading {url}: {e}")
     return images
 
 
